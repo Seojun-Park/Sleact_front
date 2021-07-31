@@ -8,7 +8,7 @@ import fetcher from '../../utils/fetcher'
 
 
 const Login = () => {
-	const { data, error, revalidate, mutate } = useSWR('http://localhost:3095/api/users', fetcher, {
+	const { data, error, revalidate, mutate } = useSWR('/api/users', fetcher, {
 		dedupingInterval: 20000,
 		errorRetryInterval: 5000,
 		errorRetryCount: 5
@@ -21,7 +21,7 @@ const Login = () => {
 		e.preventDefault()
 		setLogInError(false)
 		axios.post(
-			'http://localhost:3095/api/users/login',
+			'/api/users/login',
 			{ email, password },
 			{ withCredentials: true }
 		)

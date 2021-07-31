@@ -18,19 +18,19 @@ const InviteWorkspaceModal: FC<Props> = ({ show, onCloseModal, setShowInviteModa
 	const { workspace } = useParams<{ workspace: string }>()
 	const [newMember, onChangeNewMember, setNewMember] = useInput('')
 	const { data: userData } = useSWR<IUser | false>(
-		'http://localhost:3095/api/users',
+		'/api/users',
 		fetcher,
 		{ dedupingInterval: 1000 }
 	);
 	const { revalidate: revalidateMember } = useSWR<IChannel[]>(
-		userData ? `http://localhost:3095/api/workspaces/${workspace}/members` : null,
+		userData ? `/api/workspaces/${workspace}/members` : null,
 		fetcher
 	)
 
 	const onInviteMember = useCallback((e) => {
 		e.preventDefault()
 		if (!newMember || !newMember.trim()) return;
-		axios.post(`http://localhost:3095/api/workspaces/${workspace}/members`, {
+		axios.post(`/api/workspaces/${workspace}/members`, {
 			email: newMember
 		}, { withCredentials: true })
 			.then((response) => {
@@ -42,7 +42,7 @@ const InviteWorkspaceModal: FC<Props> = ({ show, onCloseModal, setShowInviteModa
 				toast.error(error.response?.data, { position: 'bottom-center' })
 			})
 	}, [workspace, newMember])
-	
+
 	return (
 		<Modal show={show} onCloseModal={onCloseModal}>
 			<form onSubmit={onInviteMember}>

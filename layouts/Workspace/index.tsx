@@ -1,5 +1,5 @@
 import axios from 'axios'
-import React, { VFC, useCallback, useState } from 'react'
+import React, { VFC, useCallback, useState, useEffect } from 'react'
 import { Redirect, Route, Switch, useParams } from 'react-router'
 import useSWR from 'swr'
 import { WorkSpaceStyle } from './styles'
@@ -16,6 +16,9 @@ import fetcher from '@utils/fetcher'
 import CreateChannelModal from '@components/CreateChannelModal'
 import InviteWorkspaceModal from '@components/InviteWorkspaceModal'
 import InviteChannelModal from '@components/InviteChannelModal'
+import DMList from '@components/DMList'
+import ChannelList from '@components/ChannelList'
+import useSocket from '@hooks/useSocket'
 
 const Channel = loadable(() => import('@pages/Channel'))
 const DirectMessage = loadable(() => import('@pages/DirectMessage'))
@@ -31,13 +34,29 @@ const Workspace: VFC = () => {
 	const [showInviteChannelModal, setShowInviteChannelModal] = useState<boolean>(false)
 	const { workspace } = useParams<{ workspace: string }>()
 
-	const { data, error, revalidate, mutate } = useSWR<IUser | false>('http://localhost:3095/api/users', fetcher, {
+	const { data, error, revalidate, mutate } = useSWR<IUser | false>('/api/users', fetcher, {
 		dedupingInterval: 1000
 	})
-	const { data: channelData } = useSWR<IChannel[]>(data ? `http://localhost:3095/api/workspaces/${workspace}/channels` : null, fetcher)
+	const { data: channelData } = useSWR<IChannel[]>(data ? `/api/workspaces/${workspace}/channels` : null, fetcher)
+	const { data: memberData } = useSWR<IUser[]>(data ? `/api/workspaces/${workspace}/members` : null, fetcher)
+	const [socket, disconnect] = useSocket(workspace)
+
+	useEffect(() => {
+		if (channelData && data && socket) {
+			socket.emit('login', { id: data.id, channels: channelData.map((v) => v.id) })
+		}
+	}, [socket, data, channelData])
+
+	useEffect(() => {
+		return () => {
+			disconnect()
+		}
+	}, [workspace, disconnect])
+
+
 
 	const onLogout = useCallback(() => {
-		axios.post('http://localhost:3095/api/users/logout', null, {
+		axios.post('/api/users/logout', null, {
 			withCredentials: true,
 		})
 			.then(() => {
@@ -64,13 +83,15 @@ const Workspace: VFC = () => {
 		setShowCreateChannelModal(true)
 	}, [])
 
-	const onClickInviteWorkspace = useCallback(() => { }, [])
+	const onClickInviteWorkspace = useCallback(() => {
+		setShowInviteWorkspaceModal(true)
+	}, [])
 
 	const CreateWorkspace = useCallback((e) => {
 		e.preventDefault();
 		if (!newWorkspace || !newWorkspace.trim()) return; // trim : prevent blank space
 		if (!newUrl || !newUrl.trim()) return;
-		axios.post('http://localhost:3095/api/workspaces', {
+		axios.post('/api/workspaces', {
 			workspace: newWorkspace,
 			url: newUrl,
 		},
@@ -139,10 +160,13 @@ const Workspace: VFC = () => {
 						<Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{ top: 95, left: 80 }}>
 							<WorkSpaceStyle.WorkspaceModal>
 								<h2>Sleact</h2>
+								<button onClick={onClickInviteWorkspace}>Add Member to this workspace</button>
 								<button onClick={onClickAddChannel}>Add channel</button>
 							</WorkSpaceStyle.WorkspaceModal>
 						</Menu>
-						{channelData?.map((v) => (<div>{v.name}</div>))}
+						<ChannelList />
+						<DMList />
+						{/* {channelData?.map((v) => (<div>{v.name}</div>))} */}
 					</WorkSpaceStyle.MenuScroll>
 				</WorkSpaceStyle.Channels>
 				<WorkSpaceStyle.Chats>

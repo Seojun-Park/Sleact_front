@@ -8,7 +8,7 @@ import fetcher from '@utils/fetcher';
 
 const SignUp = () => {
 	const history = useHistory()
-	const { data, error, revalidate } = useSWR('https://localhost:3095/api/users', fetcher)
+	const { data, error, revalidate } = useSWR('/api/users', fetcher)
 	const [email, onChangeEmail] = useInput('')
 	const [nickname, onChangeNickname] = useInput('')
 	const [password, setPassword] = useState<string>('')
@@ -32,7 +32,7 @@ const SignUp = () => {
 		if (!mismatchError) {
 			setSignUpError('');
 			setSignUpSuccess(false);
-			axios.post('http://localhost:3095/api/users', {
+			axios.post('/api/users', {
 				email, nickname, password
 			})
 				.then((response) => {
