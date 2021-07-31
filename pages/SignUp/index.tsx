@@ -1,14 +1,21 @@
 import React, { useCallback, useState } from 'react';
 import { SignupStyles } from './styles'
-import { Link } from 'react-router-dom'
-import useInput from '../../hooks/useInput';
+import { Link, Redirect, useHistory } from 'react-router-dom'
+import useInput from '@hooks/useInput';
+import axios from 'axios'
+import useSWR from 'swr';
+import fetcher from '@utils/fetcher';
 
 const SignUp = () => {
+	const history = useHistory()
+	const { data, error, revalidate } = useSWR('https://localhost:3095/api/users', fetcher)
 	const [email, onChangeEmail] = useInput('')
 	const [nickname, onChangeNickname] = useInput('')
 	const [password, setPassword] = useState<string>('')
 	const [passwordCheck, setPasswordCheck] = useState<string>('')
 	const [mismatchError, setMismatchError] = useState<boolean>(false);
+	const [signUpError, setSignUpError] = useState('')
+	const [signUpSuccess, setSignUpSuccess] = useState(false)
 
 	const onChangePassword = useCallback((e) => {
 		setPassword(e.target.value)
@@ -22,12 +29,32 @@ const SignUp = () => {
 
 	const onSubmit = useCallback((e) => {
 		e.preventDefault()
-		console.log(email, nickname, password, passwordCheck)
 		if (!mismatchError) {
-			console.log('서버로 회원가입 하기')
+			setSignUpError('');
+			setSignUpSuccess(false);
+			axios.post('http://localhost:3095/api/users', {
+				email, nickname, password
+			})
+				.then((response) => {
+					setSignUpSuccess(true)
+					setTimeout(() => {
+						history.push('/login')
+					}, 2000)
+				})
+				.catch((error) => {
+					setSignUpError(error.response.data)
+				})
+				.finally(() => { })
 		}
 	}, [email, nickname, password, passwordCheck])
 
+	if (data === undefined) {
+		return <div>Loading...</div>
+	}
+
+	if (data) {
+		return <Redirect to="/workspace/channel" />
+	}
 
 	return (
 		<div id="container">
@@ -64,8 +91,8 @@ const SignUp = () => {
 					</div>
 					{mismatchError && <SignupStyles.Error>비밀번호가 일치하지 않습니다.</SignupStyles.Error>}
 					{!nickname && <SignupStyles.Error>닉네임을 입력해주세요.</SignupStyles.Error>}
-					{/* {signUpError && <SignupStyles.Error>{signUpError}</SignupStyles.Error>}
-					{signUpSuccess && <SignupStyles.Success>회원가입되었습니다! 로그인해주세요.</SignupStyles.Success>} */}
+					{signUpError && <SignupStyles.Error>{signUpError}</SignupStyles.Error>}
+					{signUpSuccess && <SignupStyles.Success>회원가입되었습니다! 2초 후 로그인 페이지로 이동합니다.</SignupStyles.Success>}
 				</SignupStyles.Label>
 				<SignupStyles.Button type="submit">회원가입</SignupStyles.Button>
 			</SignupStyles.Form>

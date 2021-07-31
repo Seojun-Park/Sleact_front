@@ -86,6 +86,7 @@ export const SignupStyles = {
   Success: styled.div`
   color: #2eb67d;
   font-weight: bold;
+  margin:8px 0 16px;
 `,
   LinkContainer: styled.p`
   font-size: 13px;
