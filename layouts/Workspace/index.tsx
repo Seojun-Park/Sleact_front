@@ -43,7 +43,8 @@ const Workspace: VFC = () => {
 
 	useEffect(() => {
 		if (channelData && data && socket) {
-			socket.emit('login', { id: data.id, channels: channelData.map((v) => v.id) })
+			socket.emit('login', { id: data.id, channels: channelData.map((v) => v.id) });
+
 		}
 	}, [socket, data, channelData])
 
@@ -53,14 +54,12 @@ const Workspace: VFC = () => {
 		}
 	}, [workspace, disconnect])
 
-
-
 	const onLogout = useCallback(() => {
 		axios.post('/api/users/logout', null, {
 			withCredentials: true,
 		})
 			.then(() => {
-				mutate(false)
+				mutate(false, false)
 			})
 	}, [])
 
