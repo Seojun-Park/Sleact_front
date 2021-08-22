@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useRef } from 'react'
 import gravatar from 'gravatar'
-import useSWR from 'swr'
+import useSWR, { useSWRInfinite } from 'swr'
 import { useParams } from 'react-router'
 import axios from 'axios'
 import fetcher from '@utils/fetcher'
@@ -9,36 +9,97 @@ import ChatBox from '@components/ChatBox'
 import ChatList from '@components/ChatList'
 import useInput from '@hooks/useInput'
 import { IDM } from '@typings/db'
+import makeSection from '../../utils/makeSection'
+import Scrollbars from 'react-custom-scrollbars'
+import useSocket from '../../hooks/useSocket'
 
 const DirectMessage = () => {
+	const scrollbarRef = useRef<Scrollbars>(null);
 	const { workspace, id } = useParams<{ workspace: string, id: string }>()
+	const [socket] = useSocket(workspace)
 	const { data: userData } = useSWR(`/api/workspaces/${workspace}/users/${id}`, fetcher, {
 		dedupingInterval: 1000
 	})
 	const { data: myData } = useSWR(`/api/users`, fetcher)
-	const { data: chatData, mutate: mutateChat, revalidate } = useSWR<IDM[]>(
-		`/api/workspaces/${workspace}/dms/${id}/chats?perPage=20&page=1`, fetcher
-	)
+	const { data: chatData, mutate: mutateChat, revalidate, setSize } = useSWRInfinite<IDM[]>(
+		(index) => `/api/workspaces/${workspace}/dms/${id}/chats?perPage=20&page=${index + 1}`,
+		fetcher
+	);
+
+	const isEmpty = chatData?.[0]?.length === 0;
+	const isReachingEnd = isEmpty || (chatData && chatData[chatData.length - 1]?.length < 20) || false
+
 	const [chat, onChangeChat, setChat] = useInput('')
 
 	const onSubmitForm = useCallback((e) => {
 		e.preventDefault();
-		if (chat?.trim()) {
+		if (chat?.trim() && chatData) {
+			const savedChat = chat;
+			mutateChat((prevChatData) => {
+				prevChatData?.[0].unshift({
+					id: (chatData[0][0]?.id || 0) + 1,
+					content: savedChat,
+					SenderId: myData.id,
+					Sender: myData,
+					ReceiverId: userData.id,
+					Receiver: userData,
+					createdAt: new Date()
+				});
+				return prevChatData
+			}, false).then(() => {
+				setChat('')
+				if (scrollbarRef.current) {
+					scrollbarRef.current?.scrollToBottom()
+				}
+			})
 			axios.post(`/api/workspaces/${workspace}/dms/${id}/chats`, {
 				content: chat
-			}).then(() => {
-				revalidate()
-				setChat('')
 			}).catch(error => console.dir(error))
 		}
 		setChat('')
-	}, [])
+	}, [chat, chatData, myData, userData, workspace, id])
+
+	//put the scrollbar at the bottom when loading
+	useEffect(() => {
+		if (chatData?.length === 1) {
+			scrollbarRef.current?.scrollToBottom()
+		}
+	}, [chatData])
 
 
+	const onMessage = useCallback((data: IDM) => {
+		if (data.SenderId === Number(id) && myData.id !== Number(id)) {
+			mutateChat((chatData) => {
+				chatData?.[0].unshift(data);
+				return chatData
+			}, false).then(() => {
+				if (scrollbarRef.current) {
+					if (
+						scrollbarRef.current.getScrollHeight() <
+						scrollbarRef.current.getClientHeight() + scrollbarRef.current.getScrollTop() + 150
+					) {
+						setTimeout(() => {
+							scrollbarRef.current?.scrollToBottom();
+						}, 50)
+
+					}
+				}
+			})
+		}
+	}, [id, mutateChat, myData])
+
+	useEffect(() => {
+		socket?.on('dm', onMessage);
+		return () => {
+			socket?.off('dm', onMessage)
+		}
+	}, [socket, id, myData])
 
 	if (!userData || !myData) {
 		return null;
 	}
+
+	const chatSections = makeSection(chatData ? chatData.flat().reverse() : [])
 
 	return (
 		<DMStyle.Container>
@@ -46,7 +107,12 @@ const DirectMessage = () => {
 				<img src={gravatar.url(userData.email, { s: '24px', d: 'retro' })} alt={userData.nickname} />
 				<span>{userData.nickname}</span>
 			</DMStyle.Header>
-			<ChatList />
+			<ChatList
+				chatSections={chatSections}
+				scrollRef={scrollbarRef}
+				setSize={setSize}
+				isReachingEnd={isReachingEnd}
+			/>
 			<ChatBox chat={chat} onChangechat={onChangeChat} onSubmitForm={onSubmitForm} />
 		</DMStyle.Container>
 	)

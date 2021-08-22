@@ -1,14 +1,14 @@
 import styled from '@emotion/styled';
 
 export const DMStyle = {
-	Container: styled.div`
+  Container: styled.div`
   display: flex;
   flex-wrap: wrap;
   height: calc(100vh - 38px);
   flex-flow: column;
   position: relative;
 `,
-	Header: styled.header`
+  Header: styled.header`
   height: 64px;
   display: flex;
   width: 100%;
@@ -20,8 +20,15 @@ export const DMStyle = {
   & img {
     margin-right: 5px;
   }
+
+  & .header-right{
+    display: flex;
+    flex:1;
+    justify-content: flex-end;
+    align-items: center;
+  }
 `,
-	DragOver: styled.div`
+  DragOver: styled.div`
   position: absolute;
   top: 64px;
   left: 0;

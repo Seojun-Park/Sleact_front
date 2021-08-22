@@ -44,7 +44,6 @@ const Workspace: VFC = () => {
 	useEffect(() => {
 		if (channelData && data && socket) {
 			socket.emit('login', { id: data.id, channels: channelData.map((v) => v.id) });
-
 		}
 	}, [socket, data, channelData])
 
@@ -124,7 +123,7 @@ const Workspace: VFC = () => {
 			<WorkSpaceStyle.Header>
 				<WorkSpaceStyle.RightMenu>
 					<span onClick={onClickUserProfile}>
-						<WorkSpaceStyle.ProfileImg src={gravatar.url(data.nickname, { s: '28px', d: 'retro' })} alt={data.nickname} />
+						<WorkSpaceStyle.ProfileImg src={gravatar.url(data.email, { s: '28px', d: 'retro' })} alt={data.nickname} />
 						{showUserMenu && (
 							<Menu style={{ right: 0, top: 38 }} show={showUserMenu} onCloseModal={onClickUserProfile}>
 								<WorkSpaceStyle.ProfileModal>
@@ -142,7 +141,7 @@ const Workspace: VFC = () => {
 			</WorkSpaceStyle.Header>
 			<WorkSpaceStyle.WorkspaceWrapper>
 				<WorkSpaceStyle.Workspaces>
-					{data.Workspaces.map((ws: IWorkspace) => {
+					{data && data.Workspaces && data.Workspaces.map((ws: IWorkspace) => {
 						return (
 							<Link key={ws.id} to={`/workspace/${ws.name}/channel/general`}>
 								<WorkSpaceStyle.WorkspaceButton>{ws.name.slice(0, 1).toUpperCase()}</WorkSpaceStyle.WorkspaceButton>

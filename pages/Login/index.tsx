@@ -26,7 +26,8 @@ const Login = () => {
 			{ withCredentials: true }
 		)
 			.then((response) => {
-				mutate(response.data);
+				revalidate();
+				// mutate(response.data);
 			})
 			.catch((error) => {
 				console.log(error)
