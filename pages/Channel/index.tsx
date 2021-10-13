@@ -59,7 +59,7 @@ const Channel = () => {
 			}).then(() => {
 				revalidate()
 			})
-			.catch(error => console.dir(error))
+				.catch(error => console.dir(error))
 		}
 		setChat('')
 	}, [chat, chatData, myData, channelData, workspace, channel])
@@ -94,9 +94,9 @@ const Channel = () => {
 	}, [channel, mutateChat, myData])
 
 	useEffect(() => {
-		socket?.on('dm', onMessage);
+		socket?.on('message', onMessage);
 		return () => {
-			socket?.off('dm', onMessage)
+			socket?.off('message', onMessage)
 		}
 	}, [socket, myData])
 

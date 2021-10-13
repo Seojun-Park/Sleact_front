@@ -41,6 +41,7 @@ const Workspace: VFC = () => {
 	const { data: memberData } = useSWR<IUser[]>(data ? `/api/workspaces/${workspace}/members` : null, fetcher)
 	const [socket, disconnect] = useSocket(workspace)
 
+	console.log(channelData, memberData)
 	useEffect(() => {
 		if (channelData && data && socket) {
 			socket.emit('login', { id: data.id, channels: channelData.map((v) => v.id) });
@@ -143,7 +144,7 @@ const Workspace: VFC = () => {
 				<WorkSpaceStyle.Workspaces>
 					{data && data.Workspaces && data.Workspaces.map((ws: IWorkspace) => {
 						return (
-							<Link key={ws.id} to={`/workspace/${ws.name}/channel/general`}>
+							<Link key={ws.id} to={`/workspaces/${ws.name}/channels/general`}>
 								<WorkSpaceStyle.WorkspaceButton>{ws.name.slice(0, 1).toUpperCase()}</WorkSpaceStyle.WorkspaceButton>
 							</Link>
 						)
@@ -152,7 +153,7 @@ const Workspace: VFC = () => {
 				</WorkSpaceStyle.Workspaces>
 				<WorkSpaceStyle.Channels>
 					<WorkSpaceStyle.WorkspaceName onClick={toggleWorkspaceModal}>
-						sleact
+						Jin-sleact
 					</WorkSpaceStyle.WorkspaceName>
 					<WorkSpaceStyle.MenuScroll>
 						<Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{ top: 95, left: 80 }}>
@@ -169,8 +170,8 @@ const Workspace: VFC = () => {
 				</WorkSpaceStyle.Channels>
 				<WorkSpaceStyle.Chats>
 					<Switch>
-						<Route path="/workspace/:workspace/channel/:channel" component={Channel} />
-						<Route path="/workspace/:workspace/dm/:id" component={DirectMessage} />
+						<Route path="/workspaces/:workspace/channels/:channel" component={Channel} />
+						<Route path="/workspaces/:workspace/dms/:id" component={DirectMessage} />
 					</Switch>
 				</WorkSpaceStyle.Chats>
 			</WorkSpaceStyle.WorkspaceWrapper>

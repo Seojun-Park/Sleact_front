@@ -62,7 +62,7 @@ const DMList: FC = () => {
 							<NavLink
 								key={member.id}
 								activeClassName="selected"
-								to={`/workspace/${workspace}/dm/${member.id}`}>
+								to={`/workspaces/${workspace}/dms/${member.id}`}>
 								<i
 									className={`c-icon p-channel_sidebar__presence_icon p-channel_sidebar__presence_icon--dim_enabled c-presence ${isOnline ? 'c-presence--active c-icon--presence-online' : 'c-icon--presence-offline'
 										}`}

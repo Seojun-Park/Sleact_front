@@ -12,7 +12,7 @@ const App: React.FC = () => {
 			<Redirect exact path="/" to="/login" />
 			<Route path="/login" component={Login} />
 			<Route path="/signup" component={SignUp} />
-			<Route path="/workspace/:workspace" component={Workspace} />
+			<Route path="/workspaces/:workspace" component={Workspace} />
 		</Switch>
 	)
 }

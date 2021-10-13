@@ -39,7 +39,7 @@ const ChannelList: FC = () => {
 							<NavLink
 								key={channel.name}
 								activeClassName="selected"
-								to={`/workspace/${workspace}/channel/${channel.name}`}
+								to={`/workspaces/${workspace}/channels/${channel.name}`}
 							>
 								<span># {channel.name}</span>
 							</NavLink>
